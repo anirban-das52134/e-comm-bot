@@ -1,6 +1,6 @@
-const { ComponentDialog, WaterfallDialog, Dialog } = require('botbuilder-dialogs');
+const { WaterfallDialog, Dialog } = require('botbuilder-dialogs');
 const { CardFactory } = require('botbuilder');
-
+const { CancelAndHelpDialog } = require('./cancelAndHelpDialog');
 // DB Operations
 const CartDB = require('../database/cartDB');
 const UserDB = require('../database/userDB');
@@ -13,9 +13,9 @@ const WelcomeCard = require('../cards/welcomeCard');
 // Static Strings
 const CONSTANT = require('../utils/constant');
 
-class CartDialog extends ComponentDialog {
+class CartDialog extends CancelAndHelpDialog {
     constructor(conversationState) {
-        super(CONSTANT.CartDialog);
+        super(CONSTANT.CartDialog, conversationState);
 
         if (!conversationState) throw new Error('Conversation State is not found');
         this.conversationState = conversationState;
@@ -63,12 +63,6 @@ class CartDialog extends ComponentDialog {
                 });
                 break;
             }
-        } else {
-            await sc.context.sendActivity({
-                text: `${ CONSTANT.UnableMainMenuString }`,
-                attachments: [CardFactory.adaptiveCard(WelcomeCard.generateWelcomeCard())]
-            });
-            return await sc.endDialog();
         }
     }
 
@@ -89,12 +83,6 @@ class CartDialog extends ComponentDialog {
 
                 return await sc.replaceDialog(CONSTANT.CartDialog);
             }
-        } else {
-            await sc.context.sendActivity({
-                text: `${ CONSTANT.UnableMainMenuString }`,
-                attachments: [CardFactory.adaptiveCard(WelcomeCard.generateWelcomeCard())]
-            });
-            return await sc.endDialog();
         }
     }
 }

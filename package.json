@@ -18,6 +18,7 @@
     "dependencies": {
         "botbuilder": "~4.14.0",
         "botbuilder-dialogs": "^4.14.1",
+        "botbuilder-schema": "^4.0.0-m1.5",
         "dotenv": "~8.2.0",
         "mongodb": "^4.1.4",
         "mongoose": "^6.0.12",

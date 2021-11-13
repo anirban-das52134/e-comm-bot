@@ -1,41 +1,47 @@
-const { ComponentDialog, WaterfallDialog, DialogSet, DialogTurnStatus } = require('botbuilder-dialogs');
+const { WaterfallDialog, DialogSet, DialogTurnStatus } = require('botbuilder-dialogs');
+const { CancelAndHelpDialog } = require('./cancelAndHelpDialog');
+const { CardFactory } = require('botbuilder');
+const WelcomeCard = require('../cards/welcomeCard');
 
 // Importing Required Dialogs
 const { CartDialog } = require('./cartDialog');
 const { ProductDialog } = require('./productDialog');
 
 // Importing the String Constants
-const CONSTANTS = require('../utils/constant');
+const CONSTANT = require('../utils/constant');
 
-class RootDialog extends ComponentDialog {
+class RootDialog extends CancelAndHelpDialog {
     constructor(conversationState) {
-        super(CONSTANTS.RootDialog);
+        super(CONSTANT.RootDialog, conversationState);
 
         if (!conversationState) throw new Error('Conversation State is not found');
         this.conversationState = conversationState;
 
         this.addDialog(
-            new WaterfallDialog(CONSTANTS.rootDialogWf1, [this.messageHandler.bind(this)])
+            new WaterfallDialog(CONSTANT.rootDialogWf1, [this.messageHandler.bind(this)])
         );
 
         this.addDialog(new ProductDialog(conversationState));
         this.addDialog(new CartDialog(conversationState));
 
-        this.initialDialogId = CONSTANTS.rootDialogWf1;
+        this.initialDialogId = CONSTANT.rootDialogWf1;
     }
 
     async messageHandler(sc) {
         try {
             const currentIntent = sc.context.activity.text;
-
             if (currentIntent.toLowerCase().includes('catalog')) {
-                return await sc.beginDialog(CONSTANTS.ProductDialog);
+                return await sc.beginDialog(CONSTANT.ProductDialog);
             } else if (currentIntent.toLowerCase().includes('cart')) {
-                return await sc.beginDialog(CONSTANTS.CartDialog);
+                return await sc.beginDialog(CONSTANT.CartDialog);
             } else if (currentIntent.toLowerCase().includes('inquiry')) {
                 await sc.context.sendActivity('Inquiry system is under development.');
+            } else if (currentIntent.toLowerCase().includes('restart') || currentIntent.toLowerCase().includes('menu')) {
+                await sc.context.sendActivity(CONSTANT.RestartMessageText);
+                return await this.openMainMenu(sc);
             } else {
-                await sc.context.sendActivity('Sorry, I am unable to understand your request.');
+                await sc.context.sendActivity(CONSTANT.UnableMainMenuString);
+                return await this.openMainMenu(sc);
             }
             return await sc.endDialog();
         } catch (error) {
@@ -57,6 +63,13 @@ class RootDialog extends ComponentDialog {
         } catch (error) {
             console.log(error);
         }
+    }
+
+    async openMainMenu(sc) {
+        return await sc.context.sendActivity({
+            text: `${ CONSTANT.MenuHeader }`,
+            attachments: [CardFactory.adaptiveCard(WelcomeCard.generateWelcomeCard())]
+        });
     }
 }
 

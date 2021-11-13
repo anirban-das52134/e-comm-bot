@@ -9,12 +9,13 @@ module.exports = {
 
     // Form Headers
     UserDetail: 'Please fill up your details in the form below.',
+    MenuHeader: 'Choose an option from below:',
 
     // Alert Strings
     AlertProductExist: 'This product already exist in your cart!',
 
     // Unavailable Strings
-    UnableMainMenuString: 'Unable to understand your query. Returning to the main menu.\nChoose an option from below:',
+    UnableMainMenuString: 'Unable to understand your query. Returning to the main menu.',
 
     // Operation Strings
     AddedToCart: 'Product added to cart!',
@@ -23,5 +24,11 @@ module.exports = {
     UserAdded: 'Thank you for your order.\nYou order will be delievered soon.',
 
     // Generic Error
-    GenericError: '**Error!** Please try again.'
+    GenericError: '**Error!** Please try again.',
+
+    // Interruptions
+    HelpMessageText: 'If you want to restart then type **restart** or to cancel type **cancel**',
+    RestartMessageText: 'Restarting Bot ...',
+    CancelMessageText: 'Cancelling progress ...',
+    MenuMessageText: 'Returning to Main Menu ...'
 };
