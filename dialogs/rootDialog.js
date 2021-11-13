@@ -14,9 +14,6 @@ class RootDialog extends ComponentDialog {
         if (!conversationState) throw new Error('Conversation State is not found');
         this.conversationState = conversationState;
 
-        this.previousIntent = this.conversationState.createProperty('previousIntent');
-        this.conversationData = this.conversationState.createProperty('conversationData');
-
         this.addDialog(
             new WaterfallDialog(CONSTANTS.rootDialogWf1, [this.messageHandler.bind(this)])
         );
@@ -27,34 +24,20 @@ class RootDialog extends ComponentDialog {
         this.initialDialogId = CONSTANTS.rootDialogWf1;
     }
 
-    async messageHandler(stepContext) {
+    async messageHandler(sc) {
         try {
-            console.log('Inside ROOT');
-            var currentIntent = '';
-            const previousIntent = await this.previousIntent.get(stepContext.context, {});
-            const conversationData = await this.conversationData.get(stepContext.context, {});
-
-            if (previousIntent.intentName && conversationData.endDialog === false) {
-                currentIntent = previousIntent.intentName;
-            } else if (previousIntent.intentName && conversationData.endDialog === true) {
-                currentIntent = stepContext.context.activity.text;
-            } else {
-                currentIntent = stepContext.context.activity.text;
-                await this.previousIntent.set(stepContext.context, { intentName: stepContext.context.activity.text });
-            }
-
-            console.log(currentIntent);
+            const currentIntent = sc.context.activity.text;
 
             if (currentIntent.toLowerCase().includes('catalog')) {
-                return await stepContext.beginDialog(CONSTANTS.ProductDialog);
+                return await sc.beginDialog(CONSTANTS.ProductDialog);
             } else if (currentIntent.toLowerCase().includes('cart')) {
-                return await stepContext.beginDialog(CONSTANTS.CartDialog);
+                return await sc.beginDialog(CONSTANTS.CartDialog);
             } else if (currentIntent.toLowerCase().includes('inquiry')) {
-                await stepContext.context.sendActivity('Inquiry system is under development.');
+                await sc.context.sendActivity('Inquiry system is under development.');
             } else {
-                await stepContext.context.sendActivity('Sorry, I am unable to understand your request.');
+                await sc.context.sendActivity('Sorry, I am unable to understand your request.');
             }
-            return await stepContext.endDialog();
+            return await sc.endDialog();
         } catch (error) {
             console.log(error);
         }
