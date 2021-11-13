@@ -3,9 +3,12 @@ module.exports = {
     RootDialog: 'RootDialog',
     rootDialogWf1: 'rootDialogWf1',
     ProductDialog: 'ProductDialog',
-    CartDialog: 'ProductDialog',
+    CartDialog: 'CartDialog',
     productDialogWf1: 'productDialogWf1',
     cartDialogWf1: 'cartDialogWf1',
+
+    // Form Headers
+    UserDetail: 'Please fill up your details in the form below.',
 
     // Alert Strings
     AlertProductExist: 'This product already exist in your cart!',
@@ -16,6 +19,8 @@ module.exports = {
     // Operation Strings
     AddedToCart: 'Product added to cart!',
     QuantityUpdated: 'Quantity has been updated.',
+    DeletedFromCart: 'Product deleted from cart!',
+    UserAdded: 'Thank you for your order.\nYou order will be delievered soon.',
 
     // Generic Error
     GenericError: '**Error!** Please try again.'

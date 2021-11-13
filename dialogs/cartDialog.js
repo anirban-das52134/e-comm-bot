@@ -1,113 +1,41 @@
-const { ComponentDialog, WaterfallDialog, DialogSet, DialogTurnStatus, Dialog, ConfirmPrompt, ChoicePrompt, DateTimePrompt, NumberPrompt, TextPrompt } = require('botbuilder-dialogs');
+const { ComponentDialog, WaterfallDialog, Dialog } = require('botbuilder-dialogs');
 const { CardFactory } = require('botbuilder');
-const Cart = require('../model/cartSchema');
-const cartInfoWF1 = 'cartInfoWF1';
-const cartInfo = 'cartInfo';
-const User = require('../model/user');
+
+// DB Operations
+const CartDB = require('../database/cartDB');
+const UserDB = require('../database/userDB');
+
+// Cards
+const CartCard = require('../cards/cartCard');
+const UserForm = require('../cards/userInfoCard');
+const WelcomeCard = require('../cards/welcomeCard');
+
+// Static Strings
+const CONSTANT = require('../utils/constant');
 
 class CartDialog extends ComponentDialog {
     constructor(conversationState) {
-        super(cartInfo);
-        if (!conversationState) throw new Error('Con state require');
+        super(CONSTANT.CartDialog);
+
+        if (!conversationState) throw new Error('Conversation State is not found');
         this.conversationState = conversationState;
 
-        this.addDialog(new WaterfallDialog(cartInfoWF1, [
-            this.sendCart.bind(this),
-            this.shown.bind(this),
-            this.response.bind(this)
+        this.addDialog(new WaterfallDialog(CONSTANT.cartDialogWf1, [
+            this.ShowCart.bind(this),
+            this.HandleBuyOrDelete.bind(this),
+            this.UserDetailResponse.bind(this)
         ]));
-        this.intialDialogId = cartInfoWF1;
+
+        this.intialDialogId = CONSTANT.cartDialogWf1;
     }
 
-    async sendCart(step) {
+    async ShowCart(sc) {
         try {
-            const prods = await Cart.find();
-
-            for (let i = 0; i < prods.length; i++) {
-                const prod = prods[i];
-
-                await step.context.sendActivity({
-                    attachments: [CardFactory.adaptiveCard({
-                        type: 'AdaptiveCard',
-                        $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
-                        version: '1.3',
-                        body: [
-                            {
-                                type: 'ColumnSet',
-                                columns: [
-                                    {
-                                        type: 'Column',
-                                        width: 'stretch',
-                                        items: [
-                                            {
-                                                type: 'Image',
-                                                url: prod.url,
-                                                size: 'Medium',
-                                                horizontalAlignment: 'Center'
-                                            }
-                                        ]
-                                    },
-                                    {
-                                        type: 'Column',
-                                        width: 'stretch',
-                                        items: [
-                                            {
-                                                type: 'TextBlock',
-                                                wrap: true,
-                                                color: 'Accent',
-                                                text: prod.name,
-                                                fontType: 'Default',
-                                                size: 'Large',
-                                                horizontalAlignment: 'Center'
-                                            },
-                                            {
-                                                type: 'TextBlock',
-                                                wrap: true,
-                                                color: 'Accent',
-                                                text: prod.price,
-                                                fontType: 'Default',
-                                                size: 'Large',
-                                                horizontalAlignment: 'Center'
-                                            }]
-                                    }]
-                            }]
-                    })]
-                });
-            }
-            await step.context.sendActivity({
-                attachments: [CardFactory.adaptiveCard({
-                    type: 'AdaptiveCard',
-                    $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
-                    version: '1.0',
-                    body: [
-                        {
-                            type: 'ActionSet',
-                            actions: [
-                                {
-                                    type: 'Action.Submit',
-                                    title: 'Buy Now',
-                                    id: 'buynow',
-                                    data: {
-                                        name: 'Yes'
-                                    }
-                                }
-                            ]
-                        },
-                        {
-                            type: 'ActionSet',
-                            actions: [
-                                {
-                                    type: 'Action.Submit',
-                                    title: 'Buy Later',
-                                    id: 'buylater',
-                                    data: {
-                                        name: 'No'
-                                    }
-                                }
-                            ]
-                        }
-                    ]
-                })]
+            await sc.context.sendActivity({
+                attachments: [CardFactory.adaptiveCard(CartCard.card)]
+            });
+            await sc.context.sendActivity({
+                attachments: [CardFactory.adaptiveCard(CartCard.generateCartCard(await CartDB.fetchCart()))]
             });
             return Dialog.EndOfTurn;
         } catch (error) {
@@ -115,192 +43,59 @@ class CartDialog extends ComponentDialog {
         }
     }
 
-    async shown(step) {
-        if (step.context.activity.value) {
-            if (step.context.activity.value.name === 'Yes') {
-                await step.context.sendActivity({
-                    attachments: [CardFactory.adaptiveCard({
-                        type: 'AdaptiveCard',
-                        $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
-                        version: '1.0',
-                        body: [
-                            {
-                                type: 'TextBlock',
-                                id: 'userDetail',
-                                wrap: true,
-                                text: 'Fill your Details',
-                                horizontalAlignment: 'Center',
-                                color: 'Accent',
-                                size: 'Medium',
-                                fontType: 'Default',
-                                style: 'heading',
-                                weight: 'Bolder',
-                                spacing: 'Small'
-                            },
-                            {
-                                type: 'Input.Text',
-                                id: 'username',
-                                placeholder: 'Your Name'
-                            },
-                            {
-                                type: 'Input.Text',
-                                id: 'useremail',
-                                placeholder: 'Email Id',
-                                style: 'Email'
-                            },
-                            {
-                                type: 'Input.Text',
-                                id: 'usermob',
-                                placeholder: 'Mobile Number'
-                            },
-                            {
-                                type: 'Input.Text',
-                                id: 'useradd',
-                                placeholder: 'Adress'
-                            },
-                            {
-                                type: 'Input.Text',
-                                id: 'userzip',
-                                placeholder: 'Zip Code'
-                            },
-                            {
-                                type: 'ActionSet',
-                                actions: [
-                                    {
-                                        type: 'Action.Submit',
-                                        title: 'Buy Now',
-                                        style: 'positive',
-                                        id: 'userorder'
-                                    }
-                                ]
-                            }
-                        ]
-                    })]
+    async HandleBuyOrDelete(sc) {
+        if (sc.context.activity.value) {
+            const action = sc.context.activity.value.action;
+            var res;
+            switch (action) {
+            case 'del':
+                res = await CartDB.deleteItem(sc.context.activity.value.id);
+                if (res) {
+                    await sc.context.sendActivity(CONSTANT.DeletedFromCart);
+                } else {
+                    await sc.context.sendActivity(CONSTANT.GenericError);
+                }
+                return await sc.replaceDialog(CONSTANT.CartDialog);
+            case 'buy':
+                await sc.context.sendActivity({
+                    text: `${ CONSTANT.UserDetail }`,
+                    attachments: [CardFactory.adaptiveCard(UserForm.card)]
                 });
-                return Dialog.EndOfTurn;
-            } else {
-                await step.context.sendActivity({
-                    attachments: [
-                        CardFactory.heroCard(
-                            'These are the suggestions',
-                            null,
-                            CardFactory.actions([
-                                {
-                                    type: 'imBack',
-                                    title: 'Product Catalog',
-                                    value: 'Product Catalog'
-                                },
-                                {
-                                    type: 'imBack',
-                                    title: 'Cart',
-                                    value: 'Cart'
-                                },
-                                {
-                                    type: 'imBack',
-                                    title: 'FAQs',
-                                    value: 'FAQs'
-                                }
-                            ])
-                        )
-                    ]
-                });
-                return await step.endDialog();
+                break;
             }
         } else {
-            await step.context.sendActivity({
-                attachments: [
-                    CardFactory.heroCard(
-                        'These are the suggestions',
-                        null,
-                        CardFactory.actions([
-                            {
-                                type: 'imBack',
-                                title: 'Product Catalog',
-                                value: 'Product Catalog'
-                            },
-                            {
-                                type: 'imBack',
-                                title: 'Cart',
-                                value: 'Cart'
-                            },
-                            {
-                                type: 'imBack',
-                                title: 'FAQs',
-                                value: 'FAQs'
-                            }
-                        ])
-                    )
-                ]
+            await sc.context.sendActivity({
+                text: `${ CONSTANT.UnableMainMenuString }`,
+                attachments: [CardFactory.adaptiveCard(WelcomeCard.generateWelcomeCard())]
             });
-            return await step.endDialog();
+            return await sc.endDialog();
         }
     }
 
-    async response(step) {
-        if (step.context.activity.value) {
-            const newUser = new User({
+    async UserDetailResponse(sc) {
+        if (sc.context.activity.value) {
+            const result = await UserDB.addUser(sc.context.activity.value);
+            if (result) {
+                await sc.context.sendActivity(CONSTANT.UserAdded);
 
-                name: step.context.activity.value.username,
-                email: step.context.activity.value.useremail,
-                mobile: step.context.activity.value.usermob,
-                address: step.context.activity.value.useradd,
-                zip: step.context.activity.value.userzip
-            });
-            await newUser.save();
-            await step.context.sendActivity('You order will be delievered.');
-            await step.context.sendActivity({
-                attachments: [
-                    CardFactory.heroCard(
-                        'These are the suggestions',
-                        null,
-                        CardFactory.actions([
-                            {
-                                type: 'imBack',
-                                title: 'Product Catalog',
-                                value: 'Product Catalog'
-                            },
-                            {
-                                type: 'imBack',
-                                title: 'Cart',
-                                value: 'Cart'
-                            },
-                            {
-                                type: 'imBack',
-                                title: 'FAQs',
-                                value: 'FAQs'
-                            }
-                        ])
-                    )
-                ]
-            });
+                await sc.context.sendActivity({
+                    text: 'Choose an option from below to get started :',
+                    attachments: [CardFactory.adaptiveCard(WelcomeCard.generateWelcomeCard())]
+                });
+
+                return await sc.endDialog();
+            } else {
+                await sc.context.sendActivity(CONSTANT.GenericError);
+
+                return await sc.replaceDialog(CONSTANT.CartDialog);
+            }
         } else {
-            await step.context.sendActivity({
-                attachments: [
-                    CardFactory.heroCard(
-                        'These are the suggestions',
-                        null,
-                        CardFactory.actions([
-                            {
-                                type: 'imBack',
-                                title: 'Product Catalog',
-                                value: 'Product Catalog'
-                            },
-                            {
-                                type: 'imBack',
-                                title: 'Cart',
-                                value: 'Cart'
-                            },
-                            {
-                                type: 'imBack',
-                                title: 'FAQs',
-                                value: 'FAQs'
-                            }
-                        ])
-                    )
-                ]
+            await sc.context.sendActivity({
+                text: `${ CONSTANT.UnableMainMenuString }`,
+                attachments: [CardFactory.adaptiveCard(WelcomeCard.generateWelcomeCard())]
             });
+            return await sc.endDialog();
         }
-        return await step.endDialog();
     }
 }
 
