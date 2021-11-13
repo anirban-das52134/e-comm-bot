@@ -28,13 +28,13 @@ class ProductDialog extends ComponentDialog {
         this.intialDialogId = CONSTANT.productDialogWf1;
     }
 
-    async fetchCatalog(stepContext) {
+    async fetchCatalog(sc) {
         try {
             const prods = await ProductDB.fetchCatalog();
             const attachments = [];
             attachments.push(CardFactory.adaptiveCard(CatalogCard.card));
             attachments.push(CardFactory.adaptiveCard(CatalogCard.generateCatalogCard(prods)));
-            await stepContext.context.sendActivity({
+            await sc.context.sendActivity({
                 text: 'Choose item to add to your cart:',
                 attachments: attachments
             });
