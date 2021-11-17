@@ -1,6 +1,9 @@
 const { TeamsActivityHandler, CardFactory } = require('botbuilder');
 const welcomeCard = require('../cards/welcomeCard');
 
+// Importing the String Constants
+const CONSTANT = require('../utils/constant');
+
 class EchoBot extends TeamsActivityHandler {
     constructor(conversationState, dialog) {
         super();
@@ -18,6 +21,8 @@ class EchoBot extends TeamsActivityHandler {
             const membersAdded = context.activity.membersAdded;
             for (let cnt = 0; cnt < membersAdded.length; ++cnt) {
                 if (membersAdded[cnt].id !== context.activity.recipient.id) {
+                    await context.sendActivity(CONSTANT.WelcomeText);
+                    await context.sendActivity(CONSTANT.WelcomeText2);
                     await context.sendActivity({
                         text: 'Choose an option from below to get started :',
                         attachments: [CardFactory.adaptiveCard(welcomeCard.generateWelcomeCard())]

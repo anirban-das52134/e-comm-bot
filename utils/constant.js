@@ -1,4 +1,8 @@
 module.exports = {
+    // Welcome Message
+    WelcomeText: 'Welcome to **Shopping Bot** Menu',
+    WelcomeText2: 'I can help you with **Product Catalog**, **Buying Items**, or **Inquiry** related actions',
+
     // Dialog Name
     RootDialog: 'RootDialog',
     rootDialogWf1: 'rootDialogWf1',

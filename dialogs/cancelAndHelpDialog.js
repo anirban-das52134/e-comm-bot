@@ -24,35 +24,35 @@ class CancelAndHelpDialog extends ComponentDialog {
     async interruptionHandler(dc) {
         if (dc.context.activity.text) {
             const text = dc.context.activity.text.toLowerCase();
-
-            switch (text) {
-            case 'help':
-            case '?':
+            if (text.includes('hi') || text.includes('hello')) {
+                await dc.cancelAllDialogs();
+                await dc.context.sendActivity(CONSTANT.WelcomeText);
+                await dc.context.sendActivity(CONSTANT.WelcomeText2);
+                await dc.context.sendActivity({
+                    text: 'Choose an option from below to get started :',
+                    attachments: [CardFactory.adaptiveCard(WelcomeCard.generateWelcomeCard())]
+                });
+            } else if (text.includes('help')) {
                 await dc.context.sendActivity(CONSTANT.HelpMessageText, CONSTANT.HelpMessageText, InputHints.ExpectingInput);
                 return { status: DialogTurnStatus.waiting };
-            case 'restart':
+            } else if (text.includes('restart')) {
                 await dc.context.sendActivity(CONSTANT.RestartMessageText, CONSTANT.RestartMessageText, InputHints.IgnoringInput);
                 return await dc.replaceDialog(this.dialog);
-            case 'cancel':
-            case 'quit':
-            case 'exit':
+            } else if (text.includes('cancel') || text.includes('quit') || text.includes('exit')) {
                 await dc.context.sendActivity(CONSTANT.CancelMessageText, CONSTANT.CancelMessageText, InputHints.IgnoringInput);
                 return await dc.cancelAllDialogs();
-
-            // Quick Options
-            case 'menu':
+            } else if (text.includes('menu')) {
                 await dc.context.sendActivity(CONSTANT.MenuMessageText, CONSTANT.MenuMessageText, InputHints.IgnoringInput);
                 await dc.cancelAllDialogs();
                 return await dc.context.sendActivity({
                     text: `${ CONSTANT.MenuHeader }`,
                     attachments: [CardFactory.adaptiveCard(WelcomeCard.generateWelcomeCard())]
                 });
-            case 'cart':
+            } else if (text.includes('cart')) {
                 return await dc.replaceDialog(CONSTANT.CartDialog);
-            case 'catalog':
+            } else if (text.includes('catalog')) {
                 return await dc.replaceDialog(CONSTANT.ProductDialog);
-
-            default:
+            } else {
                 await dc.context.sendActivity(CONSTANT.UnableMainMenuString, CONSTANT.UnableMainMenuString, InputHints.IgnoringInput);
                 await dc.cancelAllDialogs();
                 return await dc.context.sendActivity({
